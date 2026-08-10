@@ -1,0 +1,14 @@
+# Virtual Environments
+.venv/
+venv/
+
+# Databases and Data
+chroma_db/
+Data/
+
+# Python Cache
+__pycache__/
+*.pyc
+
+# Environment Variables (if you ever add API keys later)
+.env
