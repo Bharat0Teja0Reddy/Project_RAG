@@ -419,6 +419,6 @@ async def upload_document(file: UploadFile = File(...)):
 
 if __name__ == "__main__":
     import uvicorn
-    print("Starting AirGap AI Server...")
+    print("Starting LocalLens Server...")
     # CHANGED: 127.0.0.1 bypasses Windows Firewall completely instead of 0.0.0.0
     uvicorn.run(app, host="127.0.0.1", port=8000)

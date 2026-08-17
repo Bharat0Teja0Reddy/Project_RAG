@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AirGap AI</title>
+    <title>LocalLens</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -489,7 +489,7 @@
     <!-- NAME PROMPT OVERLAY -->
     <div id="name-overlay" class="name-overlay hidden">
         <div class="name-box">
-            <h2>Welcome to AirGap AI</h2>
+            <h2>Welcome to LocalLens</h2>
             <p>Please enter your name or callsign to continue.</p>
             <input type="text" id="operator-name-input" placeholder="e.g. John Doe" onkeypress="if(event.key === 'Enter') submitName()">
             <button onclick="submitName()">Access Terminal</button>
@@ -500,8 +500,8 @@
         
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="neuronest_logo.jpg" alt="Logo" class="logo-icon">
-                <div class="logo-text">AirGap AI</div>
+                <img src="locallens_logo.jpg" alt="Logo" class="logo-icon">
+                <div class="logo-text">LocalLens</div>
             </div>
             
             <div style="padding: 0 1.5rem; margin-top: 1rem;">
@@ -530,7 +530,7 @@
 
         <main class="main-content">
             <button id="sidebar-toggle" class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle Knowledge Base">
-                <img src="neuronest_logo.jpg" alt="NeuroNest">
+                <img src="locallens_logo.jpg" alt="LocalLens">
             </button>
 
             <div class="hero" id="hero-section">
@@ -701,7 +701,7 @@
                 
                 const data = await response.json();
                 updateUIDocuments(data.documents);
-                statusIndicator.innerHTML = '🟢 AirGap AI is active. Strict Isolation Mode Enabled.';
+                statusIndicator.innerHTML = '🟢 LocalLens is active. Strict Isolation Mode Enabled.';
                 
                 if (bootOverlay) {
                     bootOverlay.classList.add('hidden');

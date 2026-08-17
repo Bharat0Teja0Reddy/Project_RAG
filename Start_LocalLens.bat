@@ -1,7 +1,7 @@
 @echo off
-title NeuroNest App Launcher
+title LocalLens App Launcher
 echo ===================================================
-echo     Starting NeuroNest Air-Gapped AI Engine...
+echo     Starting LocalLens Air-Gapped AI Engine...
 echo ===================================================
 echo.
 
@@ -32,7 +32,7 @@ echo.
 echo [SYSTEM] Waking up the Python Backend...
 
 :: 3. Start the API server in a NEW persistent window so you can see its logs
-start "NeuroNest API Server" cmd /k "call .venv\Scripts\activate.bat && python api_server.py"
+start "LocalLens API Server" cmd /k "call .venv\Scripts\activate.bat && python api_server.py"
 
 echo [SYSTEM] Backend is booting up. Please wait 4 seconds...
 timeout /t 4 /nobreak > nul
