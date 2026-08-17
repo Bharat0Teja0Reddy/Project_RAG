@@ -8,3 +8,12 @@ chromadb
 sentence-transformers
 pypdf
 python-multipart
+docx2txt
+python-pptx
+openpyxl
+pymupdf
+pytesseract
+
+unstructured[xlsx,pptx]
+msoffcrypto-tool
+pandas

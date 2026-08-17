@@ -12,3 +12,5 @@ __pycache__/
 
 # Environment Variables (if you ever add API keys later)
 .env
+# Private Chat History
+chats.json

@@ -10,21 +10,21 @@
     
     <style>
         :root {
-            --bg-body: linear-gradient(135deg, #201e20ea 0%, #202021 100%);
-            --bg-app: rgba(8, 8, 8, 0.99);
-            --bg-sidebar: rgba(255, 255, 255, 0.6);
-            --border-color: rgba(255, 255, 255, 0.5);
-            --text-main: #111827;
-            --text-muted: #6b7280;
-            --accent-color: #4f46e5;
-            --pill-bg: rgba(255, 255, 255, 0.9);
-            --pill-hover: rgba(255, 255, 255, 1);
+            --bg-body: #050505;
+            --bg-app: #050505;
+            --bg-sidebar: #0f0f0f;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --accent-color: #3b82f6;
+            --pill-bg: rgba(255, 255, 255, 0.05);
+            --pill-hover: rgba(255, 255, 255, 0.1);
             --msg-user: #1f2937;
             --msg-user-text: #ffffff;
-            --msg-bot: rgba(255, 255, 255, 0.95);
-            --shadow-app: 0 30px 60px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.4) inset;
-            --shadow-input: 0 10px 30px rgba(0, 0, 0, 0.05);
-            --shadow-msg: 0 4px 15px rgba(0, 0, 0, 0.03);
+            --msg-bot: rgba(255, 255, 255, 0.03);
+            --shadow-app: none;
+            --shadow-input: 0 10px 30px rgba(0, 0, 0, 0.5);
+            --shadow-msg: 0 4px 15px rgba(0, 0, 0, 0.2);
             --blur-glass: blur(20px);
         }
 
@@ -44,7 +44,7 @@
         .boot-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.7);
+            background: rgba(5, 5, 5, 0.8);
             backdrop-filter: var(--blur-glass);
             -webkit-backdrop-filter: var(--blur-glass);
             z-index: 9999;
@@ -60,6 +60,70 @@
             visibility: hidden;
             pointer-events: none;
         }
+
+        .name-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 5, 0.8);
+            backdrop-filter: var(--blur-glass);
+            -webkit-backdrop-filter: var(--blur-glass);
+            z-index: 9998;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+        
+        .name-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .name-box {
+            background: #111111;
+            border: 1px solid #333333;
+            border-radius: 16px;
+            padding: 3rem;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            transform: translateY(0);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .name-overlay.hidden .name-box {
+            transform: translateY(30px) scale(0.95);
+        }
+
+        .name-box h2 {
+            font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: #fff;
+        }
+        .name-box p {
+            color: #94a3b8; font-size: 0.95rem; margin-bottom: 2rem;
+        }
+        .name-box input {
+            width: 100%; padding: 1rem; border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05); border: 1px solid #333;
+            color: #fff; font-size: 1.05rem; outline: none; margin-bottom: 1.5rem;
+            transition: border-color 0.2s, background 0.2s;
+            text-align: center;
+        }
+        .name-box input:focus {
+            border-color: var(--accent-color); background: rgba(255, 255, 255, 0.1);
+        }
+        .name-box button {
+            width: 100%; padding: 1rem; border-radius: 8px;
+            background: var(--text-main); color: #050505; border: none;
+            font-size: 1.05rem; font-weight: 600; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .name-box button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 255, 255, 0.1);
+        }
+
 
         .spinner {
             width: 56px; height: 56px;
@@ -87,15 +151,9 @@
         }
 
         .app-window {
-            width: calc(1400vw - 2rem);
-            height: calc(100vh - 2rem);
-            max-width: 1400px;
-            max-height: 900px;
+            width: 100vw;
+            height: 100vh;
             background: var(--bg-app);
-            backdrop-filter: var(--blur-glass);
-            -webkit-backdrop-filter: var(--blur-glass);
-            border-radius: 32px;
-            box-shadow: var(--shadow-app);
             display: flex;
             overflow: hidden;
             position: relative;
@@ -126,12 +184,11 @@
         }
 
         .logo-icon {
-            width: 32px; height: 32px;
-            background: linear-gradient(135deg, #111827 0%, #374151 100%);
-            border-radius: 8px;
+            width: 40px; height: 40px;
+            border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            color: white; font-weight: 700; font-size: 16px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 10px rgba(59,130,246,0.3);
+            object-fit: cover;
         }
 
         .logo-text { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.5px; color: var(--text-main); }
@@ -197,28 +254,39 @@
 
         .sidebar-toggle-btn {
             position: absolute;
-            top: 2rem;
-            left: 2rem;
-            background: rgba(255, 255, 255, 0.9);
+            top: 1.25rem;
+            left: 1.25rem;
+            background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,1);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: none;
             color: var(--text-main);
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             z-index: 50;
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 0;
+            overflow: hidden;
         }
         
-        .sidebar-toggle-btn:hover {
-            transform: scale(1.05) translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        .sidebar-toggle-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
+
+        .sidebar-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+        }
+
+
 
         .hero {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -240,7 +308,7 @@
 
         .hero-title {
             font-size: 3rem; font-weight: 800; line-height: 1.1; letter-spacing: -1.5px; 
-            background: linear-gradient(135deg, #111827 0%, #4b5563 100%);
+            background: linear-gradient(135deg, #ffffff 0%, #9ca3af 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 0.5rem;
@@ -258,7 +326,7 @@
         }
         
         .chat-area::-webkit-scrollbar { width: 6px; }
-        .chat-area::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
+        .chat-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
         .message { 
             padding: 1.25rem 1.75rem; border-radius: 20px; font-size: 1rem; 
@@ -314,7 +382,7 @@
         .input-wrapper {
             position: absolute; bottom: 0; left: 0; width: 100%;
             padding: 2rem 4rem 3rem 4rem; display: flex; flex-direction: column; align-items: center; gap: 1rem;
-            background: linear-gradient(to top, rgba(255,255,255,0.95) 60%, rgba(255,255,255,0));
+            background: linear-gradient(to top, rgba(5,5,5,1) 60%, rgba(5,5,5,0));
             z-index: 20;
             pointer-events: none; /* Let clicks pass through the gradient */
         }
@@ -327,25 +395,25 @@
         }
 
         .mode-toggle {
-            display: flex; background: rgba(255,255,255,0.8); border-radius: 100px; padding: 6px; 
-            border: 1px solid rgba(255,255,255,0.5);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            display: flex; background: rgba(255,255,255,0.05); border-radius: 100px; padding: 4px; 
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: none;
             backdrop-filter: blur(10px);
         }
 
         .mode-btn {
-            background: transparent; border: none; color: #64748b; padding: 0.6rem 1.25rem;
-            border-radius: 100px; font-size: 0.85rem; font-weight: 600; cursor: pointer; 
+            background: transparent; border: none; color: var(--text-muted); padding: 0.5rem 1rem;
+            border-radius: 100px; font-size: 0.8rem; font-weight: 600; cursor: pointer; 
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .mode-btn.active {
-            background: #ffffff; color: var(--text-main); box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            background: rgba(255,255,255,0.15); color: var(--text-main); box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
         .filter-select {
-            background: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.5);
-            color: var(--text-main); padding: 0.6rem 1.25rem; border-radius: 100px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-main); padding: 0.5rem 1rem; border-radius: 100px;
             font-size: 0.85rem; font-weight: 600; outline: none; cursor: pointer;
             box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: all 0.3s;
             backdrop-filter: blur(10px);
@@ -356,16 +424,21 @@
             padding-right: 2.5rem;
         }
         
+        .filter-select option {
+            background: #111111;
+            color: #ffffff;
+        }
+        
         .filter-select:disabled { cursor: not-allowed; opacity: 0.5; }
 
         .search-box {
             display: flex; align-items: center; width: 100%; max-width: 850px;
-            background: #ffffff; border: 1px solid #e5e7eb;
+            background: #111111; border: 1px solid #333333;
             border-radius: 100px; padding: 0.5rem 0.5rem 0.5rem 1rem;
             box-shadow: var(--shadow-input);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .search-box:focus-within { border-color: #cbd5e1; box-shadow: 0 15px 35px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        .search-box:focus-within { border-color: #555; box-shadow: 0 15px 35px rgba(0,0,0,0.5); transform: translateY(-2px); }
 
         /* File Upload Paperclip */
         .file-upload-wrapper {
@@ -392,13 +465,13 @@
         #chat-input::placeholder { color: #94a3b8; font-weight: 400; }
 
         .btn-send {
-            background: var(--text-main); color: white; border: none;
+            background: var(--text-main); color: #050505; border: none;
             padding: 0.85rem 1.75rem; border-radius: 100px; font-weight: 600;
             cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             font-size: 0.95rem; margin-left: 0.5rem;
             display: flex; align-items: center; gap: 8px;
         }
-        .btn-send:hover { background: var(--accent-color); transform: scale(1.02); box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3); }
+        .btn-send:hover { background: #ffffff; transform: scale(1.02); box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1); }
 
         .status-text { font-size: 0.8rem; color: #64748b; font-weight: 600; margin-top: 0.5rem; letter-spacing: 0.5px;}
 
@@ -413,14 +486,37 @@
         <div class="boot-subtext">Initializing AI models and loading secure memory.</div>
     </div>
 
+    <!-- NAME PROMPT OVERLAY -->
+    <div id="name-overlay" class="name-overlay hidden">
+        <div class="name-box">
+            <h2>Welcome to AirGap AI</h2>
+            <p>Please enter your name or callsign to continue.</p>
+            <input type="text" id="operator-name-input" placeholder="e.g. John Doe" onkeypress="if(event.key === 'Enter') submitName()">
+            <button onclick="submitName()">Access Terminal</button>
+        </div>
+    </div>
+
     <div class="app-window">
         
         <aside class="sidebar">
             <div class="sidebar-header">
-                <div class="logo-icon">A</div>
+                <img src="neuronest_logo.jpg" alt="Logo" class="logo-icon">
                 <div class="logo-text">AirGap AI</div>
             </div>
             
+            <div style="padding: 0 1.5rem; margin-top: 1rem;">
+                <button onclick="startNewChat()" style="width: 100%; background: transparent; border: 1px solid var(--border-color); color: var(--text-main); padding: 0.75rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 500; transition: background 0.2s; font-size: 0.9rem;" onmouseover="this.style.background='var(--pill-hover)'" onmouseout="this.style.background='transparent'">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    New chat
+                </button>
+            </div>
+            
+            <div class="section-title" style="margin-top: 1.5rem;">Previous Chats</div>
+            
+            <div class="sidebar-content" id="chat-list" style="margin-bottom: 1rem; max-height: 200px; min-height: 50px;">
+                <!-- Chat pills generated here -->
+            </div>
+
             <div class="section-title">Knowledge Base</div>
             
             <div class="sidebar-content" id="doc-list">
@@ -434,7 +530,7 @@
 
         <main class="main-content">
             <button id="sidebar-toggle" class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle Knowledge Base">
-                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+                <img src="neuronest_logo.jpg" alt="NeuroNest">
             </button>
 
             <div class="hero" id="hero-section">
@@ -448,10 +544,10 @@
             <div class="input-wrapper">
                 <div class="controls-row">
                     <div class="mode-toggle">
-                        <button id="btn-mode-pdf" class="mode-btn active" onclick="switchMode('pdf')">📄 Document Analyzer</button>
-                        <button id="btn-mode-general" class="mode-btn" onclick="switchMode('general')">🧠 General Llama</button>
+                        <button id="btn-mode-pdf" class="mode-btn active" onclick="switchMode('pdf')">Analyzer</button>
+                        <button id="btn-mode-general" class="mode-btn" onclick="switchMode('general')">General</button>
                     </div>
-
+                    
                     <select id="memory-filter" class="filter-select">
                         <option value="All Documents">Select Target Document</option>
                     </select>
@@ -464,7 +560,7 @@
                         <button class="btn-upload" title="Upload Document or Image">
                             <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
                         </button>
-                        <input type="file" id="file-upload-input" onchange="handleFileUpload(event)" accept=".pdf,.txt,.md,.jpg,.jpeg,.png">
+                        <input type="file" id="file-upload-input" onchange="handleFileUpload(event)" accept=".pdf,.txt,.md,.jpg,.jpeg,.png,.docx,.xlsx,.pptx,.csv">
                     </div>
 
                     <input type="text" id="chat-input" placeholder="Ask AI to analyze your document..." onkeypress="handleKeyPress(event)" autocomplete="off">
@@ -496,6 +592,7 @@
         
         let loadingMsgDiv = null;
         let currentMode = 'pdf';
+        let currentChatId = null;
         
         function switchMode(mode) {
             currentMode = mode;
@@ -549,13 +646,23 @@
             }
         }
 
-        function appendMessage(text, sender) {
+        async function appendMessage(text, sender) {
             if (!heroSection.classList.contains('hidden')) heroSection.classList.add('hidden');
             const msgDiv = document.createElement('div');
             msgDiv.className = `message ${sender}`;
             
             // Helper to format bold text and newlines
             function formatText(t) { return t.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'); }
+            
+            // Helper to escape HTML to prevent Mermaid parsing errors while preserving newlines
+            function escapeHtml(unsafe) {
+                return unsafe
+                     .replace(/&/g, "&amp;")
+                     .replace(/</g, "&lt;")
+                     .replace(/>/g, "&gt;")
+                     .replace(/"/g, "&quot;")
+                     .replace(/'/g, "&#039;");
+            }
             
             // Detect and parse Mermaid.js code blocks
             let htmlContent = "";
@@ -565,10 +672,10 @@
             
             for(let i=1; i<parts.length; i++) {
                 let subParts = parts[i].split(/```/);
-                let mermaidCode = subParts[0].trim();
+                let mermaidCode = escapeHtml(subParts[0].trim());
                 
-                // Wrap the extracted code in a mermaid div
-                htmlContent += `<div class="mermaid">${mermaidCode}</div>`;
+                // Wrap the extracted code in a mermaid PRE tag (PRE preserves newlines required by Mermaid)
+                htmlContent += `<pre class="mermaid">${mermaidCode}</pre>`;
                 
                 // Add any remaining text after the code block
                 if(subParts.length > 1) {
@@ -582,7 +689,7 @@
             
             // Command the browser to render the flowchart SVG if one exists in this message
             if (parts.length > 1) {
-                try { mermaid.init(undefined, msgDiv.querySelectorAll('.mermaid')); } 
+                try { await mermaid.run({ nodes: msgDiv.querySelectorAll('.mermaid') }); } 
                 catch(e) { console.error("Flowchart generation error:", e); }
             }
         }
@@ -593,19 +700,100 @@
                 if (!response.ok) throw new Error("Server not ready");
                 
                 const data = await response.json();
-                updateUI(data.documents);
+                updateUIDocuments(data.documents);
                 statusIndicator.innerHTML = '🟢 AirGap AI is active. Strict Isolation Mode Enabled.';
                 
-                // Hide the boot overlay once connection is successful
-                bootOverlay.classList.add('hidden');
+                if (bootOverlay) {
+                    bootOverlay.classList.add('hidden');
+                    // Check for name after boot finishes
+                    setTimeout(() => {
+                        let userName = localStorage.getItem('operatorName');
+                        if (!userName) {
+                            document.getElementById('name-overlay').classList.remove('hidden');
+                            document.getElementById('operator-name-input').focus();
+                        } else {
+                            document.querySelector('.hero-title').innerText = `Welcome, ${userName}`;
+                        }
+                    }, 600); // Wait for boot overlay fade out
+                }
             } catch (error) {
                 statusIndicator.innerHTML = '🟡 AI Engine is booting up... Please wait.';
-                // Keep trying every 500ms until successful
                 setTimeout(fetchAvailableDocuments, 500);
             }
         }
 
-        function updateUI(documents) {
+        function submitName() {
+            const input = document.getElementById('operator-name-input');
+            let userName = input.value.trim();
+            if (userName) {
+                localStorage.setItem('operatorName', userName);
+            } else {
+                userName = "Operator";
+            }
+            document.querySelector('.hero-title').innerText = `Welcome, ${userName}`;
+            document.getElementById('name-overlay').classList.add('hidden');
+        }
+
+        async function fetchChats() {
+            try {
+                const response = await fetch(`${API_URL}/chats`);
+                if (response.ok) {
+                    const chats = await response.json();
+                    updateUIChats(chats);
+                }
+            } catch(e) { console.log(e); }
+        }
+
+        function updateUIChats(chats) {
+            const chatList = document.getElementById('chat-list');
+            chatList.innerHTML = '';
+            
+            chats.reverse().forEach(chat => {
+                const pill = document.createElement('div');
+                pill.className = 'doc-pill';
+                pill.style.cursor = 'pointer';
+                if (chat.chat_id === currentChatId) {
+                    pill.style.background = 'var(--pill-hover)';
+                    pill.style.borderLeft = '2px solid var(--accent-color)';
+                }
+                pill.innerHTML = `
+                    <span title="${chat.title}" onclick="loadChat('${chat.chat_id}')" style="flex: 1;">${chat.title}</span>
+                    <button class="delete-btn" onclick="deleteChat(event, '${chat.chat_id}')" title="Delete chat">
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                `;
+                chatList.appendChild(pill);
+            });
+        }
+
+        async function loadChat(chatId) {
+            try {
+                const response = await fetch(`${API_URL}/chats/${chatId}`);
+                if (response.ok) {
+                    const chat = await response.json();
+                    currentChatId = chatId;
+                    chatMessages.innerHTML = '';
+                    heroSection.classList.add('hidden');
+                    
+                    chat.messages.forEach(msg => {
+                        appendMessage(msg.content, msg.role);
+                    });
+                    fetchChats();
+                }
+            } catch(e) { console.log("Failed to load chat", e); }
+        }
+
+        async function deleteChat(event, chatId) {
+            event.stopPropagation();
+            if (!confirm("Delete this chat?")) return;
+            try {
+                await fetch(`${API_URL}/chats/${chatId}`, { method: 'DELETE' });
+                if (currentChatId === chatId) startNewChat();
+                else fetchChats();
+            } catch(e) {}
+        }
+
+        function updateUIDocuments(documents) {
             const currentSelection = memoryFilter.value;
             docList.innerHTML = '';
             memoryFilter.innerHTML = '<option value="All Documents">Target: All Documents</option>';
@@ -687,7 +875,15 @@
             if (!text) return;
             const selectedDoc = memoryFilter.value;
 
-            appendMessage(text, 'user');
+            let displayMessage = text;
+            if (currentMode === 'pdf' && selectedDoc && selectedDoc !== "All Documents") {
+                const cleanName = cleanFilename(selectedDoc);
+                displayMessage = `<div style="font-size: 0.75em; opacity: 0.6; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Target: ${cleanName}</div>${text}`;
+            } else if (currentMode === 'pdf' && selectedDoc === "All Documents") {
+                displayMessage = `<div style="font-size: 0.75em; opacity: 0.6; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Target: All Documents</div>${text}`;
+            }
+
+            appendMessage(displayMessage, 'user');
             chatInput.value = '';
             
             showThinking();
@@ -699,16 +895,30 @@
                     body: JSON.stringify({ 
                         message: text, 
                         document_name: selectedDoc,
-                        mode: currentMode 
+                        mode: currentMode,
+                        chat_id: currentChatId
                     })
                 });
                 removeThinking();
-                if (!response.ok) throw new Error("Failed to get response");
+                if (!response.ok) {
+                    let errDetail = "Connection Error";
+                    try {
+                        const errData = await response.json();
+                        errDetail = errData.detail || errDetail;
+                    } catch(e) {}
+                    throw new Error(errDetail);
+                }
                 const data = await response.json();
-                appendMessage(data.response, 'bot');
+                
+                if (data.chat_id) {
+                    currentChatId = data.chat_id;
+                    fetchChats(); // Refresh sidebar to show new chat
+                }
+                
+                appendMessage(data.response, 'assistant');
             } catch (error) {
                 removeThinking();
-                appendMessage(`❌ Connection Error.`, 'bot');
+                appendMessage(`❌ Error: ${error.message}`, 'assistant');
             }
         }
 
@@ -800,9 +1010,17 @@
             animate();
         }
 
+        async function startNewChat() {
+            chatMessages.innerHTML = '';
+            heroSection.classList.remove('hidden');
+            currentChatId = null;
+            fetchChats();
+        }
+
         window.onload = () => {
             initNeuralCore();
             fetchAvailableDocuments();
+            fetchChats();
         };
     </script>
 </body>

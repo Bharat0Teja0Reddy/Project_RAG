@@ -15,8 +15,18 @@ os.environ["TRANSFORMERS_OFFLINE"] = "1"
 from langchain_core.documents import Document
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
-from langchain_community.document_loaders import PyPDFLoader, TextLoader
+from langchain_community.document_loaders import PyPDFLoader, TextLoader, Docx2txtLoader, CSVLoader, UnstructuredExcelLoader, UnstructuredPowerPointLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+import fitz  # PyMuPDF
+import pytesseract
+from PIL import Image
+import io
+
+import json
+import uuid
+
+# Optional: Point to Tesseract binary if not in system PATH
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 app = FastAPI()
 
@@ -29,14 +39,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+CHATS_FILE = "chats.json"
+
+def load_chats():
+    if not os.path.exists(CHATS_FILE):
+        return {}
+    try:
+        with open(CHATS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except:
+        return {}
+
+def save_chats(chats):
+    with open(CHATS_FILE, "w", encoding="utf-8") as f:
+        json.dump(chats, f, indent=4)
+
+from typing import Optional
+
 class ChatRequest(BaseModel):
     message: str
-    document_name: str = None  # None or "All Documents" means search everything
+    document_name: Optional[str] = None  # None or "All Documents" means search everything
     mode: str = "pdf"
+    chat_id: Optional[str] = None
 class DeleteRequest(BaseModel):
     document_name: str
 
-chat_history = []
 vector_db = None
 db_loaded = False
 
@@ -91,6 +118,27 @@ async def clear_database():
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/chats")
+async def get_chats():
+    chats = load_chats()
+    return [{"chat_id": k, "title": v.get("title", "New Chat")} for k, v in chats.items()]
+
+@app.get("/chats/{chat_id}")
+async def get_chat_history(chat_id: str):
+    chats = load_chats()
+    if chat_id in chats:
+        return chats[chat_id]
+    raise HTTPException(status_code=404, detail="Chat not found")
+
+@app.delete("/chats/{chat_id}")
+async def delete_chat(chat_id: str):
+    chats = load_chats()
+    if chat_id in chats:
+        del chats[chat_id]
+        save_chats(chats)
+        return {"message": "Deleted"}
+    return {"message": "Not found"}
+
 @app.post("/delete")
 async def delete_document(request: DeleteRequest):
     global vector_db, db_loaded
@@ -117,44 +165,78 @@ async def delete_document(request: DeleteRequest):
 
 @app.post("/chat")
 async def chat_with_ai(request: ChatRequest):
-    global chat_history
     
     # Eject Vision model from VRAM to make room for Chat model
     try:
         requests.post("http://localhost:11434/api/generate", json={"model": "llava", "keep_alive": 0}, timeout=2)
     except:
         pass
+        
+    chats = load_chats()
+    chat_id = request.chat_id
+    
+    if not chat_id or chat_id not in chats:
+        chat_id = str(uuid.uuid4())
+        
+        # Ask LLM to generate a quick 3-5 word summary title for this query
+        try:
+            title_payload = {
+                "model": "llama3.2",
+                "messages": [
+                    {"role": "system", "content": "You are a helpful AI that summarizes user queries into very short, concise titles. Output ONLY the title (maximum 5 words), no quotes, no extra text."},
+                    {"role": "user", "content": f"Summarize this query into a title: {request.message}"}
+                ],
+                "stream": False,
+                "options": {"temperature": 0.3, "num_predict": 10}
+            }
+            title_resp = requests.post("http://localhost:11434/api/chat", json=title_payload, timeout=5)
+            title = title_resp.json().get("message", {}).get("content", "").strip().replace('"', '')
+            if not title:
+                title = "New Conversation"
+        except Exception as e:
+            print("Failed to generate title:", e)
+            title = "New Conversation"
+            
+        chats[chat_id] = {"title": title, "messages": []}
+    
+    chat_history = chats[chat_id]["messages"]
 
     try:
         if request.mode == "general":
-            system_message = "You are a helpful, general-purpose AI assistant. Answer the user's query using your general knowledge. You do not have access to any specific uploaded documents right now."
+            system_message = "You are a highly intelligent, friendly, and helpful AI assistant (similar to ChatGPT or Gemini). Explain concepts in the simplest way possible, use analogies, scenarios, and examples to make your answers easy to understand for humans. You do not have access to any specific uploaded documents right now."
+            llm_user_msg = request.message
         else:
             context_text = "No context found."
             
             if db_loaded and vector_db:
-                search_kwargs = {"k": 4}
+                # Increase K to provide much more context to the LLM (helps with summarization)
+                search_kwargs = {"k": 12}
                 if request.document_name and request.document_name != "All Documents":
-                    # Strictly filter ChromaDB search to ONLY the selected PDF
+                    # Strictly filter ChromaDB search to ONLY the selected document
                     search_kwargs["filter"] = {"source": request.document_name}
                 
                 results = vector_db.similarity_search(request.message, **search_kwargs)
                 if results:
                     context_text = "\n\n".join([doc.page_content for doc in results])
 
-            system_message = f"""You are a strict Document Analyzer. Answer the user's question based ONLY on the provided context below.
-            If the answer is not contained in the context, do not guess or use general knowledge. Say exactly "I cannot answer this based on the provided document."
+            system_message = """You are an expert, friendly Document Analyzer (like ChatGPT or Gemini). Answer the user's question using the provided Context.
+            Break down complex information into simple, easy-to-understand explanations. Use bullet points, analogies, and real-world scenarios if it helps make the concept clearer.
+            If the user asks for a summary, provide a comprehensive, easy-to-read summary based on the available Context chunks. Do not complain that you don't have the full document.
+            If the answer to a specific factual question is completely absent from the Context, kindly state that you cannot answer it based on the document.
             If the user asks for a flowchart, graph, or diagram, generate valid Mermaid.js code enclosed in ```mermaid blocks.
-            Under NO circumstances should you use outside general knowledge.
+            Do not use outside general knowledge for factual document questions."""
             
-            Context:
-            {context_text}
-            """
+            # Inject context into the user message for strong attention
+            llm_user_msg = f"Context:\n{context_text}\n\nQuestion: {request.message}"
 
         chat_history.append({"role": "user", "content": request.message})
         
+        # Build ephemeral message list for this request
+        messages_for_llm = [{"role": "system", "content": system_message}] + chat_history[:-1] + [{"role": "user", "content": llm_user_msg}]
+        
         payload = {
             "model": "llama3.2", 
-            "messages": [{"role": "system", "content": system_message}] + chat_history,
+            "messages": messages_for_llm,
             "stream": False,
             "options": {"temperature": 0.2}
         }
@@ -164,7 +246,11 @@ async def chat_with_ai(request: ChatRequest):
         
         ai_response = response.json().get("message", {}).get("content", "Error: No response generated.")
         chat_history.append({"role": "assistant", "content": ai_response})
-        return {"response": ai_response}
+        
+        chats[chat_id]["messages"] = chat_history
+        save_chats(chats)
+        
+        return {"response": ai_response, "chat_id": chat_id}
 
     except Exception as e:
         traceback.print_exc()
@@ -176,7 +262,7 @@ async def upload_document(file: UploadFile = File(...)):
     
     try:
         ext = file.filename.split('.')[-1].lower()
-        if ext not in ["pdf", "txt", "md", "png", "jpg", "jpeg"]:
+        if ext not in ["pdf", "txt", "md", "png", "jpg", "jpeg", "docx", "csv", "xlsx", "pptx"]:
             raise Exception("Unsupported file type.")
             
         print(f"\n--- Processing Upload: {file.filename} ---")
@@ -216,6 +302,29 @@ async def upload_document(file: UploadFile = File(...)):
             print("Reading PDF...")
             loader = PyPDFLoader(tmp_path)
             docs = loader.load()
+            
+            # Check if PDF is essentially empty (scanned image)
+            total_chars = sum(len(doc.page_content.strip()) for doc in docs)
+            if total_chars < 50:
+                print("PDF appears to be a scanned image. Falling back to Tesseract OCR...")
+                try:
+                    pdf_document = fitz.open(tmp_path)
+                    ocr_text = ""
+                    for page_num in range(len(pdf_document)):
+                        page = pdf_document.load_page(page_num)
+                        pix = page.get_pixmap(dpi=300)
+                        img = Image.open(io.BytesIO(pix.tobytes()))
+                        text = pytesseract.image_to_string(img)
+                        ocr_text += f"\n--- Page {page_num + 1} ---\n" + text
+                    
+                    if ocr_text.strip():
+                        docs = [Document(page_content=ocr_text)]
+                    else:
+                        raise Exception("OCR failed to find text.")
+                except Exception as e:
+                    print(f"OCR Error: {e}")
+                    raise Exception("Could not read PDF. If it's scanned, ensure Tesseract-OCR is installed in C:\\Program Files\\Tesseract-OCR\\tesseract.exe")
+
             for doc in docs:
                 doc.metadata["source"] = clean_filename
             documents.extend(docs)
@@ -223,6 +332,38 @@ async def upload_document(file: UploadFile = File(...)):
         elif ext in ["txt", "md"]:
             print("Reading Text...")
             loader = TextLoader(tmp_path, encoding="utf-8")
+            docs = loader.load()
+            for doc in docs:
+                doc.metadata["source"] = clean_filename
+            documents.extend(docs)
+            
+        elif ext == "docx":
+            print("Reading Word Document...")
+            loader = Docx2txtLoader(tmp_path)
+            docs = loader.load()
+            for doc in docs:
+                doc.metadata["source"] = clean_filename
+            documents.extend(docs)
+            
+        elif ext == "csv":
+            print("Reading CSV...")
+            loader = CSVLoader(tmp_path)
+            docs = loader.load()
+            for doc in docs:
+                doc.metadata["source"] = clean_filename
+            documents.extend(docs)
+            
+        elif ext == "xlsx":
+            print("Reading Excel...")
+            loader = UnstructuredExcelLoader(tmp_path)
+            docs = loader.load()
+            for doc in docs:
+                doc.metadata["source"] = clean_filename
+            documents.extend(docs)
+            
+        elif ext == "pptx":
+            print("Reading PowerPoint...")
+            loader = UnstructuredPowerPointLoader(tmp_path)
             docs = loader.load()
             for doc in docs:
                 doc.metadata["source"] = clean_filename
@@ -249,7 +390,7 @@ async def upload_document(file: UploadFile = File(...)):
         os.remove(tmp_path)
 
         if not documents:
-            raise Exception("No readable text found in this file. It might be a scanned image.")
+            raise Exception("No readable text found in this file.")
 
         print("Splitting text...")
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=150)

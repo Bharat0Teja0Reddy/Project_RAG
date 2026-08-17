@@ -1,0 +1,2 @@
+1. Not focussing on the targeted files instead it is focusing on the last processed file.
+2. syntax error in mermaid "syntax error in text mermaid version 10.6.1".
