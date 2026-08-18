@@ -484,6 +484,7 @@
         <div class="spinner"></div>
         <div class="boot-text">Connecting to Backend Server...</div>
         <div class="boot-subtext">Initializing AI models and loading secure memory.</div>
+        <div class="boot-subtext" style="margin-top: 8px; font-size: 0.8rem; opacity: 0.7;">(Note: First time startup may take a bit longer as models are downloaded and initialized)</div>
     </div>
 
     <!-- NAME PROMPT OVERLAY -->
@@ -493,6 +494,18 @@
             <p>Please enter your name or callsign to continue.</p>
             <input type="text" id="operator-name-input" placeholder="e.g. John Doe" onkeypress="if(event.key === 'Enter') submitName()">
             <button onclick="submitName()">Access Terminal</button>
+        </div>
+    </div>
+
+    <!-- CONFIRMATION MODAL OVERLAY -->
+    <div id="confirm-overlay" class="name-overlay hidden">
+        <div class="name-box">
+            <h2 id="confirm-title">Confirm Action</h2>
+            <p id="confirm-message">Are you sure you want to proceed?</p>
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                <button id="confirm-cancel" style="background: rgba(255, 255, 255, 0.1); color: var(--text-main);">Cancel</button>
+                <button id="confirm-proceed" style="background: #ef4444; color: #fff;">Proceed</button>
+            </div>
         </div>
     </div>
 
@@ -530,7 +543,7 @@
 
         <main class="main-content">
             <button id="sidebar-toggle" class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle Knowledge Base">
-                <img src="locallens_logo.jpg" alt="LocalLens">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
 
             <div class="hero" id="hero-section">
@@ -783,14 +796,36 @@
             } catch(e) { console.log("Failed to load chat", e); }
         }
 
-        async function deleteChat(event, chatId) {
+        function showConfirmModal(title, message, onProceed) {
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-message').innerText = message;
+            
+            const overlay = document.getElementById('confirm-overlay');
+            const btnCancel = document.getElementById('confirm-cancel');
+            const btnProceed = document.getElementById('confirm-proceed');
+            
+            // Clear old listeners
+            btnCancel.onclick = null;
+            btnProceed.onclick = null;
+            
+            btnCancel.onclick = () => { overlay.classList.add('hidden'); };
+            btnProceed.onclick = async () => {
+                overlay.classList.add('hidden');
+                await onProceed();
+            };
+            
+            overlay.classList.remove('hidden');
+        }
+
+        function deleteChat(event, chatId) {
             event.stopPropagation();
-            if (!confirm("Delete this chat?")) return;
-            try {
-                await fetch(`${API_URL}/chats/${chatId}`, { method: 'DELETE' });
-                if (currentChatId === chatId) startNewChat();
-                else fetchChats();
-            } catch(e) {}
+            showConfirmModal("Delete Chat", "Are you sure you want to permanently delete this conversation?", async () => {
+                try {
+                    await fetch(`${API_URL}/chats/${chatId}`, { method: 'DELETE' });
+                    if (currentChatId === chatId) startNewChat();
+                    else fetchChats();
+                } catch(e) {}
+            });
         }
 
         function updateUIDocuments(documents) {
@@ -820,24 +855,26 @@
             if (documents.includes(currentSelection)) memoryFilter.value = currentSelection;
         }
 
-        async function deleteDocument(docPath) {
-            if (!confirm(`Remove "${cleanFilename(docPath)}" from memory?`)) return;
-            try {
-                await fetch(`${API_URL}/delete`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ document_name: docPath })
-                });
-                if (memoryFilter.value === docPath) memoryFilter.value = "All Documents";
-                fetchAvailableDocuments();
-            } catch (e) { alert("Failed to delete."); }
+        function deleteDocument(docPath) {
+            showConfirmModal("Remove Document", `Remove "${cleanFilename(docPath)}" from the knowledge base?`, async () => {
+                try {
+                    await fetch(`${API_URL}/delete`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ document_name: docPath })
+                    });
+                    if (memoryFilter.value === docPath) memoryFilter.value = "All Documents";
+                    fetchAvailableDocuments();
+                } catch (e) { alert("Failed to delete."); }
+            });
         }
 
-        async function clearDatabase() {
-            if (!confirm("Permanently wipe the entire knowledge base?")) return;
-            try {
-                await fetch(`${API_URL}/clear`, { method: 'POST' });
-                fetchAvailableDocuments();
-            } catch (e) { alert("Failed to wipe database."); }
+        function clearDatabase() {
+            showConfirmModal("Wipe Database", "Permanently wipe the entire knowledge base? This action cannot be undone.", async () => {
+                try {
+                    await fetch(`${API_URL}/clear`, { method: 'POST' });
+                    fetchAvailableDocuments();
+                } catch (e) { alert("Failed to wipe database."); }
+            });
         }
 
         async function handleFileUpload(event) {

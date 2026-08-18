@@ -224,6 +224,11 @@ async def chat_with_ai(request: ChatRequest):
             If the user asks for a summary, provide a comprehensive, easy-to-read summary based on the available Context chunks. Do not complain that you don't have the full document.
             If the answer to a specific factual question is completely absent from the Context, kindly state that you cannot answer it based on the document.
             If the user asks for a flowchart, graph, or diagram, generate valid Mermaid.js code enclosed in ```mermaid blocks.
+            CRITICAL MERMAID RULES:
+            1. Use 'graph TD' for flowcharts.
+            2. ALL node labels must be enclosed in quotes if they contain spaces or special characters (e.g., A["Node Label (Info)"]).
+            3. Do NOT use parentheses (), brackets [], or braces {} inside unquoted node labels, as this breaks syntax.
+            4. Keep diagrams concise, logical, and strictly accurate to the user's information.
             Do not use outside general knowledge for factual document questions."""
             
             # Inject context into the user message for strong attention
